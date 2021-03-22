@@ -1,13 +1,13 @@
 import { Body, Controller, Post, Req } from '@nestjs/common';
 import axios from 'axios';
-import { РомаПидарас } from '../google/google.service';
+import { GoogleService } from '../google/google.service';
 import { JiraService } from './jira.service';
 
 @Controller('webhook')
 export class JiraController {
   constructor(
     private readonly jiraService: JiraService,
-    private readonly googleService: РомаПидарас,
+    private readonly googleService: GoogleService,
   ) {}
   @Post()
   public async getHook(@Body() body) {
@@ -28,5 +28,7 @@ export class JiraController {
       body.worklog.updateAuthor.displayName,
       a.fields.project.key,
     );
+
+    // await this.googleService.testWrite();
   }
 }

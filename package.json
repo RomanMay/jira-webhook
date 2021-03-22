@@ -28,6 +28,7 @@
     "@types/jira-client": "^6.21.0",
     "axios": "^0.21.1",
     "config": "^3.3.6",
+    "google-auth-library": "^7.0.2",
     "googleapis": "^68.0.0",
     "ioredis": "^4.24.2",
     "jira-client": "^6.21.1",

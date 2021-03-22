@@ -1,12 +1,12 @@
-export const template = (name: string, projectName: string) => {
+export const template = (name: string, range1: string, range2: string) => {
   return [
     {
-      range: `PDB!A1:G1`,
+      range: `${range1}`,
       majorDimension: 'ROWS',
       values: [[null, null, `${name}`, null, null, 'Rate', '$1.00']],
     },
     {
-      range: `PDB!A2:G2`,
+      range: `${range2}`,
       majorDimension: 'ROWS',
       values: [
         [

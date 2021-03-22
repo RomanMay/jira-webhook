@@ -25,7 +25,11 @@ export class ConfigService {
       clientEmail: this.get('google.client_email'),
       keyFile: null,
       privateKey: this.get('google.private_key'),
-      scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+      scopes: [
+        'https://www.googleapis.com/auth/spreadsheets',
+        'https://www.googleapis.com/auth/drive',
+        'https://www.googleapis.com/auth/drive.file',
+      ],
     };
   }
 
