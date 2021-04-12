@@ -3,7 +3,7 @@ import * as Client from 'ioredis';
 import { RedisService } from 'nestjs-redis';
 import { UserRedisData } from '../../common/dto/user-redis-data.dto';
 import { RedisKeys } from '../../common/enums/redis-keys.enum';
-import { UserSheetsIndexes } from '../../common/types/user-redis-data.type';
+import { UserSheetsIndexes } from '../../common/types/user-sheets-indexes.type';
 
 @Injectable()
 export class InMemoryStorageService {
@@ -21,6 +21,7 @@ export class InMemoryStorageService {
     );
   }
 
+  //change return
   public async isNamespaceInHash(namespace: string): Promise<boolean> {
     const isExist = await this.ioClient.hexists(
       RedisKeys.namespaces,
@@ -57,6 +58,8 @@ export class InMemoryStorageService {
 
     return parsedData;
   }
+
+  
 
   private _generateKeyByPattern(value1: string, value2: string): string {
     return `${value1}:${value2}`;
