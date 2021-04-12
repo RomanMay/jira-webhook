@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import * as JiraApi from 'jira-client';
-import { ConfigService } from '../shared/services/config.service';
+
+import { ConfigService } from '../shared/config.service';
 
 @Injectable()
 export class JiraService {

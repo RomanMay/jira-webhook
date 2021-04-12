@@ -1,11 +1,19 @@
 import { Global, Module } from '@nestjs/common';
-import { ConfigService } from './services/config.service';
-import { InMemoryStorageModule } from './modules/in-memory-storage/in-memory-storage.module';
+
+import { RedisModule } from 'nestjs-redis';
+
+import { ConfigService } from './config.service';
+import { InMemoryStorageService } from './in-memory-storage.service';
 
 @Global()
 @Module({
-  imports: [InMemoryStorageModule],
-  providers: [ConfigService],
-  exports: [ConfigService],
+  imports: [
+    RedisModule.forRootAsync({
+      useFactory: (configService: ConfigService) => configService.redisConfig,
+      inject: [ConfigService],
+    }),
+  ],
+  providers: [ConfigService, InMemoryStorageService],
+  exports: [ConfigService, InMemoryStorageService],
 })
 export class SharedModule {}
