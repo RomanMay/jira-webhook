@@ -14,7 +14,7 @@ export class InMemoryStorageService {
   }
 
   public async addNamespaceToHash(namespace: string): Promise<void> {
-    await this.ioClient.hmset(
+    await this.ioClient.hset(
       RedisKeys.namespaces,
       namespace,
       'Use only fields',
@@ -28,6 +28,8 @@ export class InMemoryStorageService {
       namespace,
     );
 
+    console.log('isExist:', isExist);
+
     return !!isExist;
   }
 
@@ -37,11 +39,25 @@ export class InMemoryStorageService {
       userData.userName,
     );
 
-    await this.ioClient.hmset(
+    await this.ioClient.hset(
       key,
       userData.userName,
       JSON.stringify(userData.sheetsValues),
     );
+  }
+
+  public async isUserExists(
+    namespace: string,
+    userName: string,
+  ): Promise<boolean> {
+    const key = this._generateKeyByPattern(namespace, userName);
+
+    const isKeyExist = await this.ioClient.exists(key);
+
+    if (isKeyExist == 0) {
+      return false;
+    }
+    return true;
   }
 
   public async getUserData(
@@ -59,7 +75,18 @@ export class InMemoryStorageService {
     return parsedData;
   }
 
-  
+  public async setLastIndexInNamespace(
+    namespace: string,
+    index: number,
+  ): Promise<void> {
+    await this.ioClient.hmset(namespace, RedisKeys.index, index);
+  }
+
+  public async getLastIndexInNamespace(namespace: string): Promise<number> {
+    const index = await this.ioClient.hget(namespace, RedisKeys.index);
+
+    return +index;
+  }
 
   private _generateKeyByPattern(value1: string, value2: string): string {
     return `${value1}:${value2}`;

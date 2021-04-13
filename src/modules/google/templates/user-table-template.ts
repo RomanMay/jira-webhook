@@ -1,9 +1,13 @@
-export const tableTemplate = (userName: string, range1: string, range2: string) => {
+export const tableTemplate = (
+  userName: string,
+  range1: string,
+  range2: string,
+) => {
   return [
     {
       range: `${range1}`,
       majorDimension: 'ROWS',
-      values: [[null, null, `${userName}`, null, null, 'Rate', '$1.00']],
+      values: [[null, null, `${userName}`, null, 'Rate', '$1.00']],
     },
     {
       range: `${range2}`,
@@ -15,7 +19,34 @@ export const tableTemplate = (userName: string, range1: string, range2: string) 
           'Task ID',
           'Summary',
           'Time Spent (h)',
-          'Total',
+          'DateLogged',
+        ],
+      ],
+    },
+  ];
+};
+
+export const tableTemplate = (
+  userName: string,
+  range1: string,
+  range2: string,
+) => {
+  return [
+    {
+      range: `${range1}`,
+      majorDimension: 'ROWS',
+      values: [[null, null, `${userName}`, null, 'Rate', '$1.00']],
+    },
+    {
+      range: `${range2}`,
+      majorDimension: 'ROWS',
+      values: [
+        [
+          'Project',
+          'Sprint',
+          'Task ID',
+          'Summary',
+          'Time Spent (h)',
           'DateLogged',
         ],
       ],

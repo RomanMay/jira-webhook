@@ -7,7 +7,6 @@ import { tableTemplate } from './templates/user-table-template';
 import { GoogleAuthConfig } from '../../common/types/google-auth-config.type';
 import { WriteData } from '../../common/dto/write-data.dto';
 import { UserRedisData } from '../../common/dto/user-redis-data.dto';
-import { UserSheetsIndexes } from '../../common/types/user-sheets-indexes.type';
 
 @Injectable()
 export class GoogleService {
@@ -31,24 +30,23 @@ export class GoogleService {
     this.jwtClient.authorize();
   }
 
-  public async createTemplate(userName: string): Promise<void> {
-    await this.sheets.spreadsheets.values.batchUpdate({
+  public async createTemplate(userData: UserRedisData): Promise<void> {
+    const firstLetter = this.convert(userData.sheetsValues.firstRangeIndex);
+    const lastLetter = this.convert(userData.sheetsValues.firstRangeIndex + 5);
+    console.log('firstLetter:', firstLetter, lastLetter);
+
+    await this.sheets.spreadsheets.values.append({
       auth: this.jwtClient,
       spreadsheetId: this.configService.get('google.spreadsheetId'),
       requestBody: {
         valueInputOption: 'USER_ENTERED',
-        data: tableTemplate(userName, 'PDB!A1:G1', 'PDB!A2:G2'),
+        data: tableTemplate(
+          userData.userName,
+          `${userData.namespace}!${firstLetter}1:${lastLetter}1`,
+          `${userData.namespace}!${firstLetter}2:${lastLetter}2`,
+        ),
       },
     });
-
-    // const info = await this.sheets.spreadsheets.values.get({
-    //   auth: this.jwtClient,
-    //   dateTimeRenderOption: 'FORMATTED_STRING',
-    //   majorDimension: 'ROWS',
-    //   spreadsheetId: '1hWS0NlPHdqITo7IKR3_zIXDuniSjU3qzzgmKjZi_Xd8',
-    //   range: 'PDB!A1:O1',
-    // });
-    // console.log(info.data.values[0].length);
   }
 
   public async createNewSheet(userData: UserRedisData): Promise<void> {
@@ -69,35 +67,37 @@ export class GoogleService {
     });
   }
 
-  public async write(record: WriteData, workLog: any) {
+  public async write(record: WriteData, userData: UserRedisData) {
+    const firstLetter = this.convert(userData.sheetsValues.firstRangeIndex);
+    const lastLetter = this.convert(userData.sheetsValues.firstRangeIndex + 5);
 
-    const indexes: UserSheetsIndexes = {
-      firstRangeIndex: 1,
-      lastColumnIndex: 1,
-    };
-
-    const userData = new UserRedisData(workLog, indexes);
-    console.log('userData:', userData);
-
-    await this.createNewSheet(userData);
-
-    // // console.log('2', this.jwtClient);
-
-    // const test = await this.sheets.spreadsheets.values.update({
-    //   auth: this.jwtClient,
-    //   spreadsheetId: '1hWS0NlPHdqITo7IKR3_zIXDuniSjU3qzzgmKjZi_Xd8',
-    //   range: 'PDB!A1:G1',
-    //   valueInputOption: 'USER_ENTERED',
-    //   requestBody: {
-    //     values: [['kek', 'kek', 'kek', 'kek', 'kek', 'kek', 'kek']],
-    //   },
-    // });
-    // return test;
+    await this.sheets.spreadsheets.values.update({
+      auth: this.jwtClient,
+      spreadsheetId: this.configService.get('google.spreadsheetId'),
+      range: `${userData.namespace}!${
+        firstLetter + userData.sheetsValues.lastColumnIndex
+      }:${lastLetter + userData.sheetsValues.lastColumnIndex}`,
+      valueInputOption: 'USER_ENTERED',
+      requestBody: {
+        values: [
+          [
+            record.project,
+            record.sprint,
+            record.taskId,
+            record.summary,
+            record.timeSpent,
+            record.dateLogged,
+          ],
+        ],
+      },
+    });
   }
 
   convert(number: number) {
     const a = Math.floor(number / 26);
-
+    if (a < 0) {
+      return '';
+    }
     return this.convert(a - 1) + String.fromCharCode(65 + (number % 26));
   }
 }
