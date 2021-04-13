@@ -60,7 +60,7 @@ export class InMemoryStorageService {
     return true;
   }
 
-  public async getUserData(
+  public async getUserIndexes(
     userData: UserRedisData,
   ): Promise<UserSheetsIndexes> {
     const key = this._generateKeyByPattern(
