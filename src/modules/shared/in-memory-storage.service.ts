@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import * as Client from 'ioredis';
 import { RedisService } from 'nestjs-redis';
-import { UserRedisData } from '../../common/dto/user-redis-data.dto';
+import {
+  Assignee,
+  UserData,
+  UserRedisData1,
+} from '../../common/dto/user-redis-data.dto';
 import { RedisKeys } from '../../common/enums/redis-keys.enum';
 import { UserSheetsIndexes } from '../../common/types/user-sheets-indexes.type';
 
@@ -14,11 +18,7 @@ export class InMemoryStorageService {
   }
 
   public async addNamespaceToHash(namespace: string): Promise<void> {
-    await this.ioClient.hset(
-      RedisKeys.namespaces,
-      namespace,
-      'Use only fields',
-    );
+    await this.ioClient.hset(RedisKeys.namespaces, namespace, 0);
   }
 
   //change return
@@ -33,24 +33,44 @@ export class InMemoryStorageService {
     return !!isExist;
   }
 
-  public async addUserToHash(userData: UserRedisData): Promise<void> {
-    const key = this._generateKeyByPattern(
-      userData.namespace,
-      userData.userName,
-    );
+  public async addUserToHash(userData: UserRedisData1): Promise<void> {
+    const key = this._generateKeyByPattern(userData.namespace, userData.name);
 
     await this.ioClient.hset(
       key,
-      userData.userName,
+      userData.name,
       JSON.stringify(userData.sheetsValues),
     );
   }
 
-  public async isUserExists(
-    namespace: string,
-    userName: string,
-  ): Promise<boolean> {
-    const key = this._generateKeyByPattern(namespace, userName);
+  public async configureUserIndexes(
+    user: UserRedisData1,
+  ): Promise<UserSheetsIndexes> {
+    const permittedIndex = await this.getPermittedIndexInNamespace(
+      user.namespace,
+    );
+    const indexes: UserSheetsIndexes = {
+      firstRangeIndex: permittedIndex,
+      lastColumnIndex: 2,
+    };
+
+    user.sheetsValues = indexes;
+
+    await this.increasePermittedIndex(user);
+
+    await this.addUserToHash(user);
+    return indexes;
+  }
+
+  public async incrementUsersLastColumnIndex(
+    user: UserRedisData1,
+  ): Promise<void> {
+    user.sheetsValues.lastColumnIndex += 1;
+    await this.addUserToHash(user);
+  }
+
+  public async isUserExists(user: UserData): Promise<boolean> {
+    const key = this._generateKeyByPattern(user.namespace, user.name);
 
     const isKeyExist = await this.ioClient.exists(key);
 
@@ -60,30 +80,39 @@ export class InMemoryStorageService {
     return true;
   }
 
-  public async getUserIndexes(
-    userData: UserRedisData,
-  ): Promise<UserSheetsIndexes> {
-    const key = this._generateKeyByPattern(
-      userData.namespace,
-      userData.userName,
-    );
+  public async getUserIndexes(user: UserData): Promise<UserSheetsIndexes> {
+    const key = this._generateKeyByPattern(user.namespace, user.name);
 
-    const data = await this.ioClient.hget(key, userData.userName);
+    const data = await this.ioClient.hget(key, user.name);
 
     const parsedData = JSON.parse(data) as UserSheetsIndexes;
 
     return parsedData;
   }
 
-  public async setLastIndexInNamespace(
+  public async increasePermittedIndex(user: UserRedisData1): Promise<void> {
+    const permittedIndex = await this.getPermittedIndexInNamespace(
+      user.namespace,
+    );
+    const increasedPermittedIndex = permittedIndex + 7;
+
+    await this.setPermittedIndexInNamespace(
+      user.namespace,
+      increasedPermittedIndex,
+    );
+  }
+
+  public async setPermittedIndexInNamespace(
     namespace: string,
     index: number,
   ): Promise<void> {
-    await this.ioClient.hmset(namespace, RedisKeys.index, index);
+    await this.ioClient.hset(RedisKeys.namespaces, namespace, index);
   }
 
-  public async getLastIndexInNamespace(namespace: string): Promise<number> {
-    const index = await this.ioClient.hget(namespace, RedisKeys.index);
+  public async getPermittedIndexInNamespace(
+    namespace: string,
+  ): Promise<number> {
+    const index = await this.ioClient.hget(RedisKeys.namespaces, namespace);
 
     return +index;
   }

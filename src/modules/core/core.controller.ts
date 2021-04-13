@@ -6,6 +6,6 @@ export class CoreController {
   constructor(private readonly coreService: CoreService) {}
   @Post()
   public async getHook(@Body() body) {
-    await this.coreService.handleNewRecord(body.worklog);
+    await this.coreService.jira(body.worklog);
   }
 }

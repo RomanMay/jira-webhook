@@ -6,7 +6,8 @@ import { ConfigService } from '../shared/config.service';
 import { tableTemplate, tableTemplate2 } from './templates/user-table-template';
 import { GoogleAuthConfig } from '../../common/types/google-auth-config.type';
 import { WriteData } from '../../common/dto/write-data.dto';
-import { UserRedisData } from '../../common/dto/user-redis-data.dto';
+import { Assignee, UserRedisData1 } from '../../common/dto/user-redis-data.dto';
+import { UserSheetsIndexes } from '../../common/types/user-sheets-indexes.type';
 
 @Injectable()
 export class GoogleService {
@@ -30,7 +31,7 @@ export class GoogleService {
     this.jwtClient.authorize();
   }
 
-  public async createTemplate(userData: UserRedisData): Promise<void> {
+  public async createTemplate(userData: UserRedisData1): Promise<void> {
     const firstLetter = this.convert(userData.sheetsValues.firstRangeIndex);
     const lastLetter = this.convert(userData.sheetsValues.firstRangeIndex + 5);
     console.log('firstLetter:', firstLetter, lastLetter);
@@ -57,7 +58,7 @@ export class GoogleService {
         majorDimension: 'ROWS',
         range: `${userData.namespace}!${firstLetter}:${lastLetter}`,
         values: [
-          [null, null, `${userData.userName}`, null, 'Rate', '$1.00'],
+          [null, null, `${userData.name}`, null, 'Rate', '$1.00'],
           [
             'Project',
             'Sprint',
@@ -71,7 +72,7 @@ export class GoogleService {
     });
   }
 
-  public async createNewSheet(userData: UserRedisData): Promise<void> {
+  public async createNewSheet(namespace: string): Promise<void> {
     await this.sheets.spreadsheets.batchUpdate({
       spreadsheetId: this.configService.get('google.spreadsheetId'),
       auth: this.jwtClient,
@@ -80,7 +81,7 @@ export class GoogleService {
           {
             addSheet: {
               properties: {
-                title: userData.namespace,
+                title: namespace,
               },
             },
           },
@@ -89,26 +90,30 @@ export class GoogleService {
     });
   }
 
-  public async write(record: WriteData, userData: UserRedisData) {
-    const firstLetter = this.convert(userData.sheetsValues.firstRangeIndex);
-    const lastLetter = this.convert(userData.sheetsValues.firstRangeIndex + 5);
+  public async write(assignee: Assignee) {
+    const firstLetter = this.convert(
+      assignee.owner.sheetsValues.firstRangeIndex,
+    );
+    const lastLetter = this.convert(
+      assignee.owner.sheetsValues.firstRangeIndex + 5,
+    );
 
     await this.sheets.spreadsheets.values.update({
       auth: this.jwtClient,
       spreadsheetId: this.configService.get('google.spreadsheetId'),
-      range: `${userData.namespace}!${
-        firstLetter + userData.sheetsValues.lastColumnIndex
-      }:${lastLetter + userData.sheetsValues.lastColumnIndex}`,
+      range: `${assignee.owner.namespace}!${
+        firstLetter + assignee.owner.sheetsValues.lastColumnIndex
+      }:${lastLetter + assignee.owner.sheetsValues.lastColumnIndex}`,
       valueInputOption: 'USER_ENTERED',
       requestBody: {
         values: [
           [
-            record.project,
-            record.sprint,
-            record.taskId,
-            record.summary,
-            record.timeSpent,
-            record.dateLogged,
+            assignee.task.project,
+            assignee.task.sprint,
+            assignee.task.taskId,
+            assignee.task.summary,
+            assignee.task.timeSpent,
+            assignee.task.dateLogged,
           ],
         ],
       },

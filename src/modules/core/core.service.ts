@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import { UserRedisData } from '../../common/dto/user-redis-data.dto';
+import { Assignee, UserRedisData1 } from '../../common/dto/user-redis-data.dto';
 import { WriteData } from '../../common/dto/write-data.dto';
 import { UserSheetsIndexes } from '../../common/types/user-sheets-indexes.type';
 
@@ -17,78 +17,61 @@ export class CoreService {
     private readonly recordOutput: ReportOutput,
     private readonly inMemoryStorage: InMemoryStorageService,
   ) {}
-  public async handleNewRecord(workLog: any): Promise<void> {
+
+  public async jira(workLog) {
     const issue = await this.jiraService.findIssue(workLog.issueId);
 
-    const namespace: string = workLog.self.split(/\/|[.]/)[2];
+    const assigneeData = new Assignee(workLog, issue);
 
-    const userName: string = workLog.updateAuthor.displayName;
+    this.handleNewRecord(assigneeData);
+  }
 
+  public async handleNewRecord(assignee: Assignee): Promise<void> {
+    await this._checkNamespace(assignee.owner.namespace);
+
+    assignee.owner.sheetsValues = await this.inMemoryStorage.getUserIndexes(
+      assignee.owner,
+    );
+
+    if (!assignee.hasTemplate) {
+      assignee.owner.sheetsValues = await this.inMemoryStorage.configureUserIndexes(
+        assignee.owner,
+      );
+
+      await this.googleService.createTemplate(assignee.owner);
+    }
+
+    //increment user's last column index
+    await this.inMemoryStorage.incrementUsersLastColumnIndex(assignee.owner);
+
+    await this.recordOutput.write(assignee);
+  }
+
+  private async _checkNamespace(namespace: string) {
     const isNamespaceInHash = await this.inMemoryStorage.isNamespaceInHash(
       namespace,
     );
 
-    const isUserExist = await this.inMemoryStorage.isUserExists(
-      namespace,
-      userName,
-    );
-
-    const record = new WriteData(workLog, issue);
-
-    const indexes: UserSheetsIndexes = {
-      firstRangeIndex: 0,
-      lastColumnIndex: 2,
-    };
-
-    const userData = new UserRedisData(workLog, indexes);
-
     if (!isNamespaceInHash) {
-      await this._createNamespace(userData, namespace);
-      await this._createTemplate(userData, namespace);
+      await this._createNamespace(namespace);
     }
-
-    if (!isUserExist && isNamespaceInHash) {
-      const lastRangeIndex = await this.inMemoryStorage.getLastIndexInNamespace(
-        namespace,
-      );
-
-      userData.sheetsValues.firstRangeIndex = lastRangeIndex + 7;
-
-      await this._createTemplate(userData, namespace);
-    }
-
-    if (isUserExist && isNamespaceInHash) {
-      const indexesFromStorage = await this.inMemoryStorage.getUserIndexes(
-        userData,
-      );
-
-      userData.sheetsValues = indexesFromStorage;
-      userData.sheetsValues.lastColumnIndex += 1;
-
-      await this.inMemoryStorage.addUserToHash(userData);
-    }
-
-    await this.recordOutput.write(record, userData);
   }
 
-  private async _createTemplate(
-    userData: UserRedisData,
-    namespace: string,
-  ): Promise<void> {
-    await this.googleService.createTemplate(userData);
-    userData.sheetsValues.lastColumnIndex += 1;
-    await this.inMemoryStorage.addUserToHash(userData);
-    await this.inMemoryStorage.setLastIndexInNamespace(
-      namespace,
-      userData.sheetsValues.firstRangeIndex,
-    );
-  }
+  // private async _createTemplate(
+  //   userData: UserRedisData,
+  //   namespace: string,
+  // ): Promise<void> {
+  //   await this.googleService.createTemplate(userData);
+  //   userData.sheetsValues.lastColumnIndex += 1;
+  //   await this.inMemoryStorage.addUserToHash(userData);
+  //   await this.inMemoryStorage.setPermittedIndexInNamespace(
+  //     namespace,
+  //     userData.sheetsValues.firstRangeIndex,
+  //   );
+  // }
 
-  private async _createNamespace(
-    userData: UserRedisData,
-    namespace: string,
-  ): Promise<void> {
-    await this.googleService.createNewSheet(userData);
+  private async _createNamespace(namespace: string): Promise<void> {
+    await this.googleService.createNewSheet(namespace);
     await this.inMemoryStorage.addNamespaceToHash(namespace);
   }
 }
