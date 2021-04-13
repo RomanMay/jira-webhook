@@ -3,7 +3,7 @@ import { google, sheets_v4 } from 'googleapis';
 import { JWT } from 'google-auth-library';
 
 import { ConfigService } from '../shared/config.service';
-import { tableTemplate } from './templates/user-table-template';
+import { tableTemplate, tableTemplate2 } from './templates/user-table-template';
 import { GoogleAuthConfig } from '../../common/types/google-auth-config.type';
 import { WriteData } from '../../common/dto/write-data.dto';
 import { UserRedisData } from '../../common/dto/user-redis-data.dto';
@@ -35,16 +35,38 @@ export class GoogleService {
     const lastLetter = this.convert(userData.sheetsValues.firstRangeIndex + 5);
     console.log('firstLetter:', firstLetter, lastLetter);
 
+    // await this.sheets.spreadsheets.values.batchUpdate({
+    //   auth: this.jwtClient,
+    //   spreadsheetId: this.configService.get('google.spreadsheetId'),
+    //   requestBody: {
+    //     valueInputOption: 'USER_ENTERED',
+    //     data: tableTemplate(
+    //       userData.userName,
+    //       `${userData.namespace}!${firstLetter}1:${lastLetter}1`,
+    //       `${userData.namespace}!${firstLetter}2:${lastLetter}2`,
+    //     ),
+    //   },
+    // });
+
     await this.sheets.spreadsheets.values.append({
       auth: this.jwtClient,
       spreadsheetId: this.configService.get('google.spreadsheetId'),
+      range: `${userData.namespace}!${firstLetter}:${lastLetter}`,
+      valueInputOption: 'USER_ENTERED',
       requestBody: {
-        valueInputOption: 'USER_ENTERED',
-        data: tableTemplate(
-          userData.userName,
-          `${userData.namespace}!${firstLetter}1:${lastLetter}1`,
-          `${userData.namespace}!${firstLetter}2:${lastLetter}2`,
-        ),
+        majorDimension: 'ROWS',
+        range: `${userData.namespace}!${firstLetter}:${lastLetter}`,
+        values: [
+          [null, null, `${userData.userName}`, null, 'Rate', '$1.00'],
+          [
+            'Project',
+            'Sprint',
+            'Task ID',
+            'Summary',
+            'Time Spent (h)',
+            'DateLogged',
+          ],
+        ],
       },
     });
   }
