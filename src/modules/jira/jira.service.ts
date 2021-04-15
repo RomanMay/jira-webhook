@@ -10,7 +10,7 @@ export class JiraService {
     this.jiraApi = new JiraApi(this.configService.jiraConfig);
   }
 
-  public async findIssue(issueId) {
+  public async findIssue(issueId: string) {
     return this.jiraApi.findIssue(issueId);
   }
 }

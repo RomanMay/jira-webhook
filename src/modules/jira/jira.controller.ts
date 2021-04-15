@@ -1,30 +1,20 @@
-// import { Body, Controller, Post, Req } from '@nestjs/common';
-// import axios from 'axios';
-// import { GoogleService } from '../google/google.service';
-// import { JiraService } from './jira.service';
+import { Body, Controller, Post } from '@nestjs/common';
+import { Assignee } from '../../common/dto/user-redis-data.dto';
+import { CoreService } from '../core/core.service';
+import { JiraService } from './jira.service';
 
-// @Controller('webhook')
-// export class JiraController {
-//   constructor(
-//     private readonly jiraService: JiraService,
-//     private readonly googleService: GoogleService,
-//   ) {}
-//   @Post()
-//   public async getHook(@Body() body) {
-//     // console.log(body.worklog.issueId);
-//     const a = await this.jiraService.findIssue(body.worklog.issueId);
-//     // console.log(a.fields);
-//     // console.log('b:', a);
-//     // console.log(
-//     //   body.worklog.updateAuthor.displayName,
-//     //   body.worklog.created,
-//     //   a.fields.summary,
-//     //   a.fields.project.key,
-//     //   a.fields.customfield_10020[0].name,
-//     //   a.fields.updated,
-//     // );
-//     console.log(a.fields.customfield_10020);
+@Controller('webhook')
+export class JiraController {
+  constructor(
+    private readonly jiraService: JiraService,
+    private readonly coreService: CoreService,
+  ) {}
+  @Post()
+  public async getHook(@Body() body) {
+    const issue = await this.jiraService.findIssue(body.worklog.issueId);
 
-//     // await this.googleService.testWrite();
-//   }
-// }
+    const assigneeData = new Assignee(body.worklog, issue);
+
+    await this.coreService.handleNewRecord(assigneeData);
+  }
+}

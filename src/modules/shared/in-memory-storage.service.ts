@@ -4,7 +4,7 @@ import { RedisService } from 'nestjs-redis';
 import {
   Assignee,
   UserData,
-  UserRedisData1,
+  UserRedisData,
 } from '../../common/dto/user-redis-data.dto';
 import { RedisKeys } from '../../common/enums/redis-keys.enum';
 import { UserSheetsIndexes } from '../../common/types/user-sheets-indexes.type';
@@ -21,7 +21,6 @@ export class InMemoryStorageService {
     await this.ioClient.hset(RedisKeys.namespaces, namespace, 0);
   }
 
-  //change return
   public async isNamespaceInHash(namespace: string): Promise<boolean> {
     const isExist = await this.ioClient.hexists(
       RedisKeys.namespaces,
@@ -33,7 +32,7 @@ export class InMemoryStorageService {
     return !!isExist;
   }
 
-  public async addUserToHash(userData: UserRedisData1): Promise<void> {
+  public async addUserToHash(userData: UserRedisData): Promise<void> {
     const key = this._generateKeyByPattern(userData.namespace, userData.name);
 
     await this.ioClient.hset(
@@ -44,7 +43,7 @@ export class InMemoryStorageService {
   }
 
   public async configureUserIndexes(
-    user: UserRedisData1,
+    user: UserRedisData,
   ): Promise<UserSheetsIndexes> {
     const permittedIndex = await this.getPermittedIndexInNamespace(
       user.namespace,
@@ -63,7 +62,7 @@ export class InMemoryStorageService {
   }
 
   public async incrementUsersLastColumnIndex(
-    user: UserRedisData1,
+    user: UserRedisData,
   ): Promise<void> {
     user.sheetsValues.lastColumnIndex += 1;
     await this.addUserToHash(user);
@@ -90,7 +89,7 @@ export class InMemoryStorageService {
     return parsedData;
   }
 
-  public async increasePermittedIndex(user: UserRedisData1): Promise<void> {
+  public async increasePermittedIndex(user: UserRedisData): Promise<void> {
     const permittedIndex = await this.getPermittedIndexInNamespace(
       user.namespace,
     );

@@ -3,17 +3,13 @@ import { google, sheets_v4 } from 'googleapis';
 import { JWT } from 'google-auth-library';
 
 import { ConfigService } from '../shared/config.service';
-import { tableTemplate, tableTemplate2 } from './templates/user-table-template';
 import { GoogleAuthConfig } from '../../common/types/google-auth-config.type';
-import { WriteData } from '../../common/dto/write-data.dto';
-import { Assignee, UserRedisData1 } from '../../common/dto/user-redis-data.dto';
-import { UserSheetsIndexes } from '../../common/types/user-sheets-indexes.type';
+import { Assignee, UserRedisData } from '../../common/dto/user-redis-data.dto';
 
 @Injectable()
 export class GoogleService {
   private jwtClient: JWT;
   private sheets: sheets_v4.Sheets;
-  private googleConfig: GoogleAuthConfig;
 
   constructor(private readonly configService: ConfigService) {
     this.sheets = google.sheets('v4');
@@ -31,23 +27,13 @@ export class GoogleService {
     this.jwtClient.authorize();
   }
 
-  public async createTemplate(userData: UserRedisData1): Promise<void> {
-    const firstLetter = this.convert(userData.sheetsValues.firstRangeIndex);
-    const lastLetter = this.convert(userData.sheetsValues.firstRangeIndex + 5);
-    console.log('firstLetter:', firstLetter, lastLetter);
-
-    // await this.sheets.spreadsheets.values.batchUpdate({
-    //   auth: this.jwtClient,
-    //   spreadsheetId: this.configService.get('google.spreadsheetId'),
-    //   requestBody: {
-    //     valueInputOption: 'USER_ENTERED',
-    //     data: tableTemplate(
-    //       userData.userName,
-    //       `${userData.namespace}!${firstLetter}1:${lastLetter}1`,
-    //       `${userData.namespace}!${firstLetter}2:${lastLetter}2`,
-    //     ),
-    //   },
-    // });
+  public async createTemplate(userData: UserRedisData): Promise<void> {
+    const firstLetter = this._convertIndexToLetter(
+      userData.sheetsValues.firstRangeIndex,
+    );
+    const lastLetter = this._convertIndexToLetter(
+      userData.sheetsValues.firstRangeIndex + 5,
+    );
 
     await this.sheets.spreadsheets.values.append({
       auth: this.jwtClient,
@@ -67,6 +53,36 @@ export class GoogleService {
             'Time Spent (h)',
             'DateLogged',
           ],
+        ],
+      },
+    });
+
+    const sheetId = await this._getSheetId(userData);
+
+    await this.sheets.spreadsheets.batchUpdate({
+      spreadsheetId: this.configService.get('google.spreadsheetId'),
+      auth: this.jwtClient,
+      requestBody: {
+        requests: [
+          {
+            updateBorders: {
+              range: {
+                sheetId: sheetId,
+                startRowIndex: 0,
+                endRowIndex: 2,
+                startColumnIndex: userData.sheetsValues.firstRangeIndex,
+                endColumnIndex: userData.sheetsValues.firstRangeIndex + 6,
+              },
+
+              bottom: {
+                style: 'SOLID',
+                width: 10,
+                color: {
+                  blue: 1.0,
+                },
+              },
+            },
+          },
         ],
       },
     });
@@ -91,10 +107,10 @@ export class GoogleService {
   }
 
   public async write(assignee: Assignee) {
-    const firstLetter = this.convert(
+    const firstLetter = this._convertIndexToLetter(
       assignee.owner.sheetsValues.firstRangeIndex,
     );
-    const lastLetter = this.convert(
+    const lastLetter = this._convertIndexToLetter(
       assignee.owner.sheetsValues.firstRangeIndex + 5,
     );
 
@@ -120,11 +136,24 @@ export class GoogleService {
     });
   }
 
-  convert(number: number) {
+  private async _getSheetId(userData: UserRedisData): Promise<number> {
+    const get = await this.sheets.spreadsheets.get({
+      auth: this.jwtClient,
+      spreadsheetId: this.configService.get('google.spreadsheetId'),
+      ranges: [`${userData.namespace}!A1:C1`],
+    });
+
+    return get.data.sheets[0].properties.sheetId;
+  }
+
+  private _convertIndexToLetter(number: number) {
     const a = Math.floor(number / 26);
     if (a < 0) {
       return '';
     }
-    return this.convert(a - 1) + String.fromCharCode(65 + (number % 26));
+    return (
+      this._convertIndexToLetter(a - 1) +
+      String.fromCharCode(65 + (number % 26))
+    );
   }
 }
