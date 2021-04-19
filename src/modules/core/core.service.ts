@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 
 import { Assignee } from '../../common/dto/user-redis-data.dto';
 
+import { DbService } from '../db/db.service';
 import { GoogleService } from '../google/google.service';
 import { InMemoryStorageService } from '../shared/in-memory-storage.service';
 import { ReportOutput } from './record-output.service';
@@ -12,6 +13,7 @@ export class CoreService {
     private readonly googleService: GoogleService,
     private readonly recordOutput: ReportOutput,
     private readonly inMemoryStorage: InMemoryStorageService,
+    private readonly dbService: DbService,
   ) {}
 
   public async handleNewRecord(assignee: Assignee): Promise<void> {
@@ -21,17 +23,23 @@ export class CoreService {
       assignee.owner,
     );
 
+    let user = await this.dbService.getUserByName(assignee.owner.name);
+
     if (!assignee.hasTemplate) {
       assignee.owner.sheetsValues = await this.inMemoryStorage.configureUserIndexes(
         assignee.owner,
       );
 
       await this.googleService.createTemplate(assignee.owner);
+
+      user = await this.dbService.createAndSaveUserOnNamespace(user, assignee);
     }
 
     await this.inMemoryStorage.incrementUsersLastColumnIndex(assignee.owner);
 
     await this.recordOutput.write(assignee);
+
+    await this.dbService.createAndSaveRecord(assignee.task, user);
   }
 
   private async _checkNamespace(namespace: string) {
@@ -47,5 +55,6 @@ export class CoreService {
   private async _createNamespace(namespace: string): Promise<void> {
     await this.googleService.createNewSheet(namespace);
     await this.inMemoryStorage.addNamespaceToHash(namespace);
+    await this.dbService.createAndSaveNamespace(namespace);
   }
 }

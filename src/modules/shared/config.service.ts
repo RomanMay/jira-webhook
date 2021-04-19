@@ -1,8 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import * as config from 'config';
+import { ConnectionOptions } from 'typeorm';
+import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 
 import { GoogleAuthConfig } from '../../common/types/google-auth-config.type';
-import { JiraConfig } from '../../common/types/jira-gonfig.type';
+import { JiraConfig } from '../../common/types/jira-config.type';
 import { RedisConfig } from '../../common/types/redis-config.type';
 
 @Injectable()
@@ -13,12 +15,26 @@ export class ConfigService {
     return this._config.get<T>(key);
   }
 
+  public getObject<T>(key: string): T {
+    return this._config.util.toObject(this.get(key));
+  }
+
   public get redisConfig(): RedisConfig {
     return {
       host: this.get('redis.host'),
       port: this.get<number>('redis.port'),
       password: this.get('redis.password'),
     };
+  }
+
+  public get typeormConfig(): ConnectionOptions {
+    const ormConfig: ConnectionOptions = {
+      ...this.getObject<ConnectionOptions>('typeorm'),
+      namingStrategy: new SnakeNamingStrategy(),
+    };
+    console.log(ormConfig);
+
+    return ormConfig;
   }
 
   public get googleAuthConfig(): GoogleAuthConfig {
