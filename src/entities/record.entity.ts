@@ -24,8 +24,8 @@ export class RecordEntity {
   @Column({ type: 'varchar' })
   summary: string;
 
-  @Column({ type: 'int' })
-  timeSpent: number;
+  @Column({ type: 'varchar' })
+  timeSpent: string;
 
   @Column({ type: 'timestamp' })
   dateLogged: Date;
