@@ -32,6 +32,7 @@
     "googleapis": "^68.0.0",
     "ioredis": "^4.24.2",
     "jira-client": "^6.21.1",
+    "js-yaml": "^4.1.0",
     "nestjs-redis": "^1.2.8",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
