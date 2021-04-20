@@ -8,7 +8,7 @@ import { ConfigService } from './modules/shared/config.service';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.select(SharedModule).get(ConfigService);
-
+  app.enableCors();
   await app.listen(configService.get('app.port'));
 }
 bootstrap();

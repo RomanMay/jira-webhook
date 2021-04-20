@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import * as config from 'config';
 
 import { GoogleAuthConfig } from '../../common/types/google-auth-config.type';
-import { JiraConfig } from '../../common/types/jira-gonfig.type';
+import { JiraConfig } from '../../common/types/jira-config.type';
 import { RedisConfig } from '../../common/types/redis-config.type';
 
 @Injectable()
