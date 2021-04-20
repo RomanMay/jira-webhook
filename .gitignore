@@ -1,7 +1,8 @@
 # compiled output
 /dist
 /node_modules
-/config/local.env.yml
+npm-debug.log
+.DS_Store
 
 # Logs
 logs
