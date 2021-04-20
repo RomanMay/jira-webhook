@@ -13,13 +13,14 @@ export class ConfigService {
     return this._config.get<T>(key);
   }
 
-  public get redisConfig(): RedisConfig {
-    console.log(this.get('redis.host'), this.get<number>('redis.port'), this.get('redis.password'), this.get('redis.url'))
+  public get redisConfig(): { url: string } /*RedisConfig*/ {
+    // console.log(this.get('redis.host'), this.get<number>('redis.port'), this.get('redis.password'), this.get('redis.url'))
+    console.log(process.env.REDIS_URL)
     return {
-      host: this.get('redis.host'),
-      port: this.get<number>('redis.port'),
-      password: this.get('redis.password'),
-      url: this.get('redis.url'),
+      // host: this.get('redis.host'),
+      // port: this.get<number>('redis.port'),
+      // password: this.get('redis.password'),
+      url: process.env.REDIS_URL,
     };
   }
 
