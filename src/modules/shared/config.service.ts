@@ -14,10 +14,12 @@ export class ConfigService {
   }
 
   public get redisConfig(): RedisConfig {
+    console.log(this.get('redis.host'), this.get<number>('redis.port'), this.get('redis.password'), this.get('redis.uri'))
     return {
       host: this.get('redis.host'),
       port: this.get<number>('redis.port'),
       password: this.get('redis.password'),
+      uri: this.get('redis.uri'),
     };
   }
 
