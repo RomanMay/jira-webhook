@@ -19,7 +19,7 @@ export class ConfigService {
       host: this.get('redis.host'),
       port: this.get<number>('redis.port'),
       password: this.get('redis.password'),
-      url: this.get('redis.uri'),
+      url: this.get('redis.url'),
     };
   }
 
