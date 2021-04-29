@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
 import { Assignee } from '../../common/dto/user-redis-data.dto';
 import { CoreService } from '../core/core.service';
 import { JiraService } from './jira.service';
@@ -9,6 +9,12 @@ export class JiraController {
     private readonly jiraService: JiraService,
     private readonly coreService: CoreService,
   ) {}
+
+  @Get('ping')
+  async ping(): Promise<string> {
+    return 'pong';
+  }
+
   @Post()
   public async getHook(@Body() body) {
     console.log('body:', body);
