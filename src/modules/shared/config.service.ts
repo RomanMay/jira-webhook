@@ -38,9 +38,9 @@ export class ConfigService {
   public get jiraConfig(): JiraConfig {
     return {
       protocol: 'https',
-      host: 'prommoto.atlassian.net',
-      username: 'vladyslav.toloknov@gmail.com',
-      password: 'CCoW8QsYu40O9VtdJ5Gu7298',
+      host: this.get('jira.host'),
+      username: this.get('jira.username'),
+      password: this.get('jira.password'),
       apiVersion: '2',
       strictSSL: true,
     };

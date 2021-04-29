@@ -11,6 +11,7 @@ export class JiraController {
   ) {}
   @Post()
   public async getHook(@Body() body) {
+    console.log('body:', body);
     const issue = await this.jiraService.findIssue(body.worklog.issueId);
 
     const assigneeData = new Assignee(body.worklog, issue);
