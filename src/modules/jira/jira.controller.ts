@@ -17,11 +17,11 @@ export class JiraController {
 
   @Post()
   public async getHook(@Body() body, @Req() req) {
-    console.log('body:', body);
-    console.log('req:', req);
+    console.log('body:', body.workLog);
+    console.log('body.issue:', body.issue);
     // const issue = await this.jiraService.findIssue(body.worklog.issueId);
 
-    // const assigneeData = new Assignee(body.worklog, issue);
+    // // const assigneeData = new Assignee(body.worklog, body.issue);
 
     // await this.coreService.handleNewRecord(assigneeData);
   }
