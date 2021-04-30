@@ -15,7 +15,7 @@ export class JiraController {
     return 'pong';
   }
 
-  @Get()
+  @Post()
   public async getHook(@Body() body, @Req() req) {
     console.log('body:', body);
     console.log('req:', req);
