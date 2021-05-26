@@ -10,7 +10,7 @@ export class WriteData {
 
   constructor(workLog: JiraApi.JsonResponse, issue: JiraApi.JsonResponse) {
     this.project = issue.fields.project.key;
-    if (issue.fields.customfield_10020 !== null) {
+    if (issue.fields.customfield_10020) {
       this.sprint = issue.fields.customfield_10020[0].name;
     }
     this.sprint = 'no sprint';
