@@ -17,7 +17,7 @@ export class JiraController {
 
   @Post()
   public async getHook(@Body() body, @Req() req) {
-    console.log('body:', body.workLog.id);
+    console.log('body:', body.workLog.id, body.issue.fields.updated);
 
     const assigneeData = new Assignee(body.workLog, body.issue);
 
