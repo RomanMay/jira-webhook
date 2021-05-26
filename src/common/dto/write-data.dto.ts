@@ -16,7 +16,7 @@ export class WriteData {
     this.taskId = `${issue.fields.issuetype.self.split('/r')[0]}/browse/${
       issue.key
     }`;
-    this.dateLogged = issue.fields.updated.split('T')[0];
+    this.dateLogged = issue.fields.updated;
     this.timeSpent = workLog.timeSpent;
   }
 }
