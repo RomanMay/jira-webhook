@@ -17,11 +17,9 @@ export class JiraController {
 
   @Post()
   public async getHook(@Body() body, @Req() req) {
-    console.log('body:', body.workLog);
-    console.log('body.issue:', body.issue);
+    console.log('body:', body.workLog.id);
 
     const assigneeData = new Assignee(body.workLog, body.issue);
-    console.log('assigneeData:', assigneeData);
 
     await this.coreService.handleNewRecord(assigneeData);
   }
