@@ -117,7 +117,9 @@ export class InMemoryStorageService {
   }
 
   public async isWorklogIdInSet(id: string): Promise<boolean> {
-    return !!this.ioClient.sismember(RedisKeys.worklogIds, id);
+    const redis = await this.ioClient.sismember(RedisKeys.worklogIds, id);
+    console.log('redis', !!redis);
+    return !!redis;
   }
 
   private _generateKeyByPattern(value1: string, value2: string): string {

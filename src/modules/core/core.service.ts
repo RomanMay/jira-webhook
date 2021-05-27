@@ -44,6 +44,8 @@ export class CoreService {
       worklogId.toString(),
     );
 
+    console.log('isWorklogIdInSet', isWorklogIdInSet);
+
     if (isWorklogIdInSet) {
       throw new WebhookExistException();
     }
