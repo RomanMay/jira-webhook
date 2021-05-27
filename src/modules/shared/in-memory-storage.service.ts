@@ -1,11 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import * as Client from 'ioredis';
 import { RedisService } from 'nestjs-redis';
-import {
-  Assignee,
-  UserData,
-  UserRedisData,
-} from '../../common/dto/user-redis-data.dto';
+import { UserData, UserRedisData } from '../../common/dto/user-redis-data.dto';
 import { RedisKeys } from '../../common/enums/redis-keys.enum';
 import { UserSheetsIndexes } from '../../common/types/user-sheets-indexes.type';
 
@@ -114,6 +110,14 @@ export class InMemoryStorageService {
     const index = await this.ioClient.hget(RedisKeys.namespaces, namespace);
 
     return +index;
+  }
+
+  public async addWorklogIdToSet(id: number): Promise<void> {
+    await this.ioClient.sadd(RedisKeys.worklogIds, id);
+  }
+
+  public async isWorklogIdInSet(id: string): Promise<boolean> {
+    return !!this.ioClient.sismember(RedisKeys.worklogIds, id);
   }
 
   private _generateKeyByPattern(value1: string, value2: string): string {

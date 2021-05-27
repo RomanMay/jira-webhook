@@ -26,6 +26,6 @@ export class JiraController {
 
     const assigneeData = new Assignee(body.workLog, body.issue);
 
-    await this.coreService.handleNewRecord(assigneeData);
+    await this.coreService.handleNewRecord(assigneeData, body.workLog.id);
   }
 }

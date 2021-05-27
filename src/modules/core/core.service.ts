@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { WebhookExistException } from 'src/common/errors/webhook-exist.exception';
 
 import { Assignee } from '../../common/dto/user-redis-data.dto';
 
@@ -14,7 +15,11 @@ export class CoreService {
     private readonly inMemoryStorage: InMemoryStorageService,
   ) {}
 
-  public async handleNewRecord(assignee: Assignee): Promise<void> {
+  public async handleNewRecord(
+    assignee: Assignee,
+    worklogId: number,
+  ): Promise<void> {
+    await this._worklogFlow(worklogId);
     await this._checkNamespace(assignee.owner.namespace);
 
     assignee.owner.sheetsValues = await this.inMemoryStorage.getUserIndexes(
@@ -32,6 +37,18 @@ export class CoreService {
     await this.inMemoryStorage.incrementUsersLastColumnIndex(assignee.owner);
 
     await this.recordOutput.write(assignee);
+  }
+
+  private async _worklogFlow(worklogId: number): Promise<void> {
+    const isWorklogIdInSet = await this.inMemoryStorage.isWorklogIdInSet(
+      worklogId.toString(),
+    );
+
+    if (isWorklogIdInSet) {
+      throw new WebhookExistException();
+    }
+
+    await this.inMemoryStorage.addWorklogIdToSet(worklogId);
   }
 
   private async _checkNamespace(namespace: string) {
