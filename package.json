@@ -12,7 +12,7 @@
     "start": "NODE_ENV=local.env ts-node-dev --ignore-watch node_modules --watch src --transpile-only -r tsconfig-paths/register src/main.ts",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "nest build && NODE_ENV=production.env REDIS_URL=redis://:p45c799e884913ba72321c63b953ec98fad41a6520b15b821e09220b26cfdc011@ec2-54-155-177-171.eu-west-1.compute.amazonaws.com:13390 node dist/main",
+    "start:prod": "NODE_ENV=production.env node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",

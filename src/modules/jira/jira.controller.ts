@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req } from '@nestjs/common';
 import { Assignee } from '../../common/dto/user-redis-data.dto';
 import { CoreService } from '../core/core.service';
 import { JiraService } from './jira.service';
@@ -9,13 +9,23 @@ export class JiraController {
     private readonly jiraService: JiraService,
     private readonly coreService: CoreService,
   ) {}
+
+  @Get('ping')
+  async ping(): Promise<string> {
+    return 'pong';
+  }
+
   @Post()
-  public async getHook(@Body() body) {
-    console.log(body.worklog)
-    const issue = await this.jiraService.findIssue(body.worklog.issueId);
+  public async getHook(@Body() body, @Req() req) {
+    console.log(
+      'body:',
+      body.workLog.id,
+      body.issue.fields.updated,
+      body.issue.fields.summary,
+    );
 
-    const assigneeData = new Assignee(body.worklog, issue);
+    const assigneeData = new Assignee(body.workLog, body.issue);
 
-    await this.coreService.handleNewRecord(assigneeData);
+    await this.coreService.handleNewRecord(assigneeData, body.workLog.id);
   }
 }
